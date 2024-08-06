@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .calendar-container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .calendar-header h1 {
+            margin: 0;
+        }
+        .calendar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .calendar-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .calendar-table th, .calendar-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .calendar-table th {
+            background-color: #f4f4f4;
+        }
+        .calendar-table td {
+            cursor: pointer;
+        }
+        .today {
+            background-color: #ffeb3b;
+        }
+        .future {
+            background-color: #ffffff;
+        }
+        .past {
+            background-color: #e0e0e0;
+        }
+        .note {
+            display: none;
+            position: absolute;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .note.active {
+            display: block;
+        }
+        .note textarea {
+            width: 100%;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <h1 id="calendar-month-year"></h1>
+        </div>
+        <div class="calendar" id="calendar"></div>
+        <div class="note" id="note">
+            <textarea placeholder="Add your notes here..."></textarea>
+            <button onclick="saveNote()">Save</button>
+        </div>
+    </div>
+    
+    <script>
+        const calendarContainer = document.getElementById('calendar');
+        const calendarMonthYear = document.getElementById('calendar-month-year');
+        const note = document.getElementById('note');
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDate = null;
+        
+        function generateCalendar(year, month) {
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const firstDay = new Date(year, month, 1).getDay();
+            let calendarHTML = '<table class="calendar-table"><thead><tr>';
+            const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            for (let day of weekdays) {
+                calendarHTML += `<th>${day}</th>`;
+            }
+            calendarHTML += '</tr></thead><tbody><tr>';
+            
+            for (let i = 0; i < firstDay; i++) {
+                calendarHTML += '<td></td>';
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const today = new Date();
+                const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
+                const dateClass = isToday ? 'today' : (new Date(year, month, day) < today ? 'past' : 'future');
+                calendarHTML += `<td class="${dateClass}" onclick="showNoteDialog(${year}, ${month}, ${day})">${day}</td>`;
+                
+                if ((firstDay + day) % 7 === 0) {
+                    calendarHTML += '</tr><tr>';
+                }
+            }
+            
+            while ((firstDay + daysInMonth) % 7 !== 0) {
+                calendarHTML += '<td></td>';
+                firstDay++;
+            }
+            
+            calendarHTML += '</tr></tbody></table>';
+            calendarContainer.innerHTML = calendarHTML;
+            calendarMonthYear.textContent = `${today.toLocaleString('default', { month: 'long' })} ${year}`;
+        }
+
+        function showNoteDialog(year, month, day) {
+            if (new Date(year, month, day) < new Date()) return; // Can't edit past dates
+            selectedDate = new Date(year, month, day);
+            note.classList.add('active');
+        }
+
+        function saveNote() {
+            // Here, you would save the note to local storage or a backend
+            note.classList.remove('active');
+        }
+        
+        generateCalendar(currentYear, currentMonth);
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight') {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                generateCalendar(currentYear, currentMonth);
+            } else if (event.key === 'ArrowLeft') {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                generateCalendar(currentYear, currentMonth);
+            }
+        });
+    </script>
+</body>
+</html>
